@@ -1,2 +1,4 @@
 FromProject	FromType	ToProject	ToType
+ChildProject	ChildProject.VeryComplexChild	ChildProject	ChildProject.ComplexChild
 ParentProject	ParentProject.Parent	ChildProject	ChildProject.ComplexChild
+ParentProject	ParentProject.Parent	ChildProject	ChildProject.VeryComplexChild

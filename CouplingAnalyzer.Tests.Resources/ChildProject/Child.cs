@@ -13,11 +13,31 @@ namespace ChildProject
         }
     }
 
-    public class ComplexChild
+    public class ComplexChild : SimpleChild
     {
         public void Logic()
         {
             
         }
+    }
+
+    public interface IChildInterface
+    {
+        void ICanDoSomething();
+    }
+
+    public struct ChildData
+    {
+        public int MyProperty { get; set; }
+
+        public void Logic()
+        {
+
+        }
+    }
+
+    public class VeryComplexChild : ComplexChild
+    {
+        
     }
 }
