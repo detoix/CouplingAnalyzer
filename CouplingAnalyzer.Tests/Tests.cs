@@ -16,8 +16,8 @@ namespace CouplingAnalyzer.Tests
             await Program.Main(new[] { Path.Combine(directory, $"{projectDirectoryName}.sln"), nameof(GeneratedReportIsEqualToExpected) });
 
             var expected = File.ReadAllLines(
-                Path.Combine(Directory.GetCurrentDirectory(), "Expected", $"{projectDirectoryName}.csv"));
-            var actual = File.ReadAllLines(Path.Combine(directory, $"{projectDirectoryName}.csv"));
+                Path.Combine(Directory.GetCurrentDirectory(), "Expected", $"{projectDirectoryName}.tsv"));
+            var actual = File.ReadAllLines(Path.Combine(directory, $"{projectDirectoryName}.tsv"));
             
             CollectionAssert.AreEqual(expected, actual);
         }

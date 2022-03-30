@@ -80,7 +80,7 @@ namespace CouplingAnalyzer
 
                 var reportPath = Path.Combine(
                     Path.GetDirectoryName(solutionPath),
-                    $"{Path.GetFileNameWithoutExtension(solutionPath)}.csv");
+                    $"{Path.GetFileNameWithoutExtension(solutionPath)}.tsv");
                 var content = Enumerable.Empty<string>()
                     .Append("FromProject\tFromType\tToProject\tToType")
                     .Concat(dependencies.Select(e => $"{e.SourceSegment.Text}\t{e.FromNamespaceName}.{e.FromTypeName}\t{e.SourceSegment.Path}\t{e.ToNamespaceName}.{e.ToTypeName}"));
