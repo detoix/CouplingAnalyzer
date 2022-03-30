@@ -11,14 +11,14 @@ using Codartis.NsDepCop.Analysis;
 
 namespace CouplingAnalyzer
 {
-    class Program
+    public class Program
     {
-        static async Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             // Attempt to set the version of MSBuild.
             var visualStudioInstances = MSBuildLocator.QueryVisualStudioInstances().ToArray();
-            var instance = visualStudioInstances.Length == 1
-                // If there is only one instance of MSBuild on this machine, set that as the one to use.
+            var instance = (visualStudioInstances.Length == 1 || args.Length > 1)
+                // If there is only one instance of MSBuild on this machine or test flag is used, set that as the one to use.
                 ? visualStudioInstances[0]
                 // Handle selecting the version of MSBuild you want to use.
                 : SelectVisualStudioInstance(visualStudioInstances);
@@ -61,13 +61,18 @@ namespace CouplingAnalyzer
                             {
                                 foreach (var item in nodeAnalyzer.GetDependenciesOtherThanSystem(syntaxNode, semanticModel))
                                 {
-                                    dependencies.Add(item);
+                                    dependencies.Add(new TypeDependency(
+                                        item.FromNamespaceName,
+                                        item.FromTypeName,
+                                        item.ToNamespaceName,
+                                        item.ToTypeName,
+                                        new SourceSegment(0, 0, 0, 0, project.Name, nodeAnalyzer.ProjectContaining(item))));
                                 }
                             }
-                            catch (Exception)
+                            catch (Exception ex)
                             {
                                 dependencies.Add(new TypeDependency(
-                                    string.Empty, "Error", string.Empty, document.Name, default));
+                                    string.Empty, ex.Message, string.Empty, ex.StackTrace, default));
                             }
                         }
                     }
@@ -75,10 +80,10 @@ namespace CouplingAnalyzer
 
                 var reportPath = Path.Combine(
                     Path.GetDirectoryName(solutionPath),
-                    $"{Path.GetFileNameWithoutExtension(solutionPath)} coupling report.csv");
+                    $"{Path.GetFileNameWithoutExtension(solutionPath)}.csv");
                 var content = Enumerable.Empty<string>()
-                    .Append("From\tTo")
-                    .Concat(dependencies.Select(e => $"{e.FromNamespaceName}.{e.FromTypeName}\t{e.ToNamespaceName}.{e.ToTypeName}"));
+                    .Append("FromProject\tFromType\tToProject\tToType")
+                    .Concat(dependencies.Select(e => $"{e.SourceSegment.Text}\t{e.FromNamespaceName}.{e.FromTypeName}\t{e.SourceSegment.Path}\t{e.ToNamespaceName}.{e.ToTypeName}"));
 
                 File.WriteAllLines(reportPath, content);
             }
@@ -126,13 +131,17 @@ namespace CouplingAnalyzer
     class CouplingToClassesFinder : SyntaxNodeAnalyzer
     {
         private HashSet<MethodKind> AllowedMethodKinds { get; }
+        private IDictionary<string, string> AssembliesByPath { get; }
 
-        public CouplingToClassesFinder()
+        internal CouplingToClassesFinder()
         {
             this.AllowedMethodKinds = new HashSet<MethodKind>() { MethodKind.PropertyGet, MethodKind.PropertySet, MethodKind.Constructor };
+            this.AssembliesByPath = new Dictionary<string, string>();
         }
 
-        public IEnumerable<TypeDependency> GetDependenciesOtherThanSystem(SyntaxNode node, SemanticModel semanticModel)
+        internal string ProjectContaining(TypeDependency typeDependency) => this.AssembliesByPath[typeDependency.SourceSegment.Path];
+
+        internal IEnumerable<TypeDependency> GetDependenciesOtherThanSystem(SyntaxNode node, SemanticModel semanticModel)
         {
             var result = this.GetTypeDependencies(node, semanticModel)
                 .Where(e => !e.ToNamespaceName.StartsWith(nameof(System)))
@@ -160,6 +169,9 @@ namespace CouplingAnalyzer
 
                 if (!onlyFieldsPropertiesAndConstructors)
                 {
+                    this.AssembliesByPath.TryAdd(
+                        syntaxNode.GetLocation().GetLineSpan().Path,
+                        item.ContainingAssembly.Name);
                     yield return item;
                 }
             }

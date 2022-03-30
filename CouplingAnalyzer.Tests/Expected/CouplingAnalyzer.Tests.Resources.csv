@@ -1,0 +1,2 @@
+FromProject	FromType	ToProject	ToType
+ParentProject	ParentProject.Parent	ChildProject	ChildProject.ComplexChild
