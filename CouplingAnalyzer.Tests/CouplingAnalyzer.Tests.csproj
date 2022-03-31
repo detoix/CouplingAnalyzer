@@ -15,10 +15,4 @@
     <ProjectReference Include="..\CouplingAnalyzer\CouplingAnalyzer.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="CouplingAnalyzer.Tests.Resources.tsv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>  
-  </ItemGroup>
-
 </Project>
