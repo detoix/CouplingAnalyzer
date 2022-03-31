@@ -33,7 +33,7 @@ namespace ParentProject
     {
         void Foo()
         {
-
+            new object().Anything();
         }
     }
 }

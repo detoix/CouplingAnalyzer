@@ -4,3 +4,4 @@ ParentProject	CouplingAnalyzer.Tests.Resources/ParentProject/OtherClasses.cs	Par
 ParentProject	CouplingAnalyzer.Tests.Resources/ParentProject/Parent.cs	ParentProject.Parent	ChildProject	CouplingAnalyzer.Tests.Resources/ChildProject/Child.cs	ChildProject.ComplexChild
 ParentProject	CouplingAnalyzer.Tests.Resources/ParentProject/Parent.cs	ParentProject.Parent	ChildProject	CouplingAnalyzer.Tests.Resources/ChildProject/Child.cs	ChildProject.VeryComplexChild
 ParentProject	CouplingAnalyzer.Tests.Resources/ParentProject/Parent.cs	ParentProject.IParent	ChildProject	CouplingAnalyzer.Tests.Resources/ChildProject/Extensions.cs	ChildProject.Extensions.OtherChild
+ParentProject	CouplingAnalyzer.Tests.Resources/ParentProject/Parent.cs	ParentProject.ParentData	Unknown	Unknown	ChildProject.Extensions.Extensions
