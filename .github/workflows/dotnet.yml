@@ -23,7 +23,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Restore resources' dependencies
-      run: dotnet restore ../CouplingAnalyzer.Tests.References
+      run: dotnet restore ../CouplingAnalyzer.Tests.Resources
     - name: Build
       run: dotnet build --no-restore
     - name: Test
