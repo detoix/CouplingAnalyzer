@@ -6,7 +6,7 @@ namespace ParentProject
 {
     public class Parent
     {
-        private readonly ChildData childData;
+        private readonly ChildData _childData;
 
         public Parent(SimpleChild child)
         {

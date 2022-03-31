@@ -35,10 +35,11 @@ namespace CouplingAnalyzer
                 // Print message for WorkspaceFailed event to help diagnosing project load failures.
                 workspace.WorkspaceFailed += (o, e) => Console.WriteLine(e.Diagnostic.Message);
 
-                var progressReporter = new ConsoleProgressReporter();
-                var nodeAnalyzer = new CouplingToClassesFinder();
-                var dependencies = new HashSet<TypeDependency>();
                 var solutionPath = args[0];
+                var rootFinder = new GitRootFinder(solutionPath);
+                var progressReporter = new ConsoleProgressReporter();
+                var nodeAnalyzer = new CouplingToClassesFinder(rootFinder.RootDirectory());
+                var dependencies = new HashSet<TypeDependency>();
                 Console.WriteLine($"Loading solution '{solutionPath}'");
 
                 // Attach progress reporter so we print projects as they are loaded.
@@ -123,15 +124,43 @@ namespace CouplingAnalyzer
         }
     }
 
+    class GitRootFinder
+    {
+        private readonly string _solutionPath;
+
+        internal GitRootFinder(string solutionPath)
+        {
+            this._solutionPath = solutionPath;
+        }
+
+        internal string RootDirectory()
+        {
+            var directory = new DirectoryInfo(Path.GetDirectoryName(this._solutionPath));
+            while(directory.GetDirectories(".git").Length == 0)
+            {
+                directory = directory.Parent;
+
+                if(directory == null)
+                {
+                    throw new DirectoryNotFoundException("We went all the way up to the system root directory and didn't find any \".git\" directory!");
+                }
+            }
+            
+            return directory.FullName;
+        }
+    }
+
     class CouplingToClassesFinder : SyntaxNodeAnalyzer
     {
-        private HashSet<MethodKind> AllowedMethodKinds { get; }
-        private IDictionary<string, ITypeSymbol> AssembliesByPath { get; }
+        private readonly string _rootDirectory;
+        private readonly HashSet<MethodKind> _allowedMethodKinds;
+        private readonly IDictionary<string, ITypeSymbol> _assembliesByPath;
 
-        internal CouplingToClassesFinder()
+        internal CouplingToClassesFinder(string rootDirectory)
         {
-            this.AllowedMethodKinds = new HashSet<MethodKind>() { MethodKind.PropertyGet, MethodKind.PropertySet, MethodKind.Constructor };
-            this.AssembliesByPath = new Dictionary<string, ITypeSymbol>();
+            this._rootDirectory = rootDirectory;
+            this._allowedMethodKinds = new HashSet<MethodKind>() { MethodKind.PropertyGet, MethodKind.PropertySet, MethodKind.Constructor };
+            this._assembliesByPath = new Dictionary<string, ITypeSymbol>();
         }
 
         internal IEnumerable<TypeDependency> GetDependenciesOtherThanSystem(SyntaxNode node, SemanticModel semanticModel, Document document)
@@ -148,8 +177,8 @@ namespace CouplingAnalyzer
                         e.ToNamespaceName,
                         e.ToTypeName,
                         new SourceSegment(0, 0, 0, 0,
-                            string.Join("|", document.Project.Name, document.FilePath), 
-                            string.Join("|", itemLocation.Project, itemLocation.FilePath)));
+                            string.Join("|", document.Project.Name, document.FilePath.Replace(_rootDirectory + Path.DirectorySeparatorChar, string.Empty)), 
+                            string.Join("|", itemLocation.Project, itemLocation.FilePath.Replace(_rootDirectory + Path.DirectorySeparatorChar, string.Empty))));
 
                     return response;
                 });
@@ -157,7 +186,7 @@ namespace CouplingAnalyzer
             return result;
         }
 
-        private (string Project, string FilePath) LocationOf(TypeDependency typeDependency) => this.AssembliesByPath.TryGetValue(typeDependency.SourceSegment.ToString(), out var result)
+        private (string Project, string FilePath) LocationOf(TypeDependency typeDependency) => this._assembliesByPath.TryGetValue(typeDependency.SourceSegment.ToString(), out var result)
             ? (result.ContainingAssembly.Name, result.Locations[0].GetLineSpan().Path) : ("Unknown", "Unknown");
 
         protected override IEnumerable<ITypeSymbol> GetConstituentTypes(ITypeSymbol typeSymbol, SyntaxNode syntaxNode)
@@ -175,7 +204,7 @@ namespace CouplingAnalyzer
 
                 var onlyFieldsPropertiesAndConstructors = members.All(e => e.Kind == SymbolKind.Field
                     || e.Kind == SymbolKind.Property
-                    || (e is IMethodSymbol method && this.AllowedMethodKinds.Contains(method.MethodKind)));
+                    || (e is IMethodSymbol method && this._allowedMethodKinds.Contains(method.MethodKind)));
 
                 if (!onlyFieldsPropertiesAndConstructors && !item.ContainingNamespace.ToDisplayString().StartsWith(nameof(System)))
                 {
@@ -190,9 +219,9 @@ namespace CouplingAnalyzer
                         lineSpan.Path
                     ).ToString();
 
-                    if (!this.AssembliesByPath.ContainsKey(key))
+                    if (!this._assembliesByPath.ContainsKey(key))
                     {
-                        this.AssembliesByPath.Add(key, item);
+                        this._assembliesByPath.Add(key, item);
                     }
 
                     yield return item;
