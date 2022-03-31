@@ -1,5 +1,6 @@
 ﻿using System;
 using ChildProject;
+using ChildProject.Extensions;
 
 namespace ParentProject
 {
@@ -14,12 +15,25 @@ namespace ParentProject
 
         public void Foo(VeryComplexChild veryComplexChild)
         {
-            
+
         }
 
         public void Handle(IChildInterface i)
         {
             
+        }
+    }
+
+    public interface IParent
+    {
+        void Test(OtherChild any);
+    }
+
+    public struct ParentData
+    {
+        void Foo()
+        {
+            new object().Anything();
         }
     }
 }

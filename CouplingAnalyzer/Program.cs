@@ -59,20 +59,15 @@ namespace CouplingAnalyzer
                         {
                             try
                             {
-                                foreach (var item in nodeAnalyzer.GetDependenciesOtherThanSystem(syntaxNode, semanticModel))
+                                foreach (var dependency in nodeAnalyzer.GetDependenciesOtherThanSystem(syntaxNode, semanticModel, document))
                                 {
-                                    dependencies.Add(new TypeDependency(
-                                        item.FromNamespaceName,
-                                        item.FromTypeName,
-                                        item.ToNamespaceName,
-                                        item.ToTypeName,
-                                        new SourceSegment(0, 0, 0, 0, project.Name, nodeAnalyzer.ProjectContaining(item))));
+                                    dependencies.Add(dependency);
                                 }
                             }
                             catch (Exception ex)
                             {
                                 dependencies.Add(new TypeDependency(
-                                    string.Empty, ex.Message, string.Empty, ex.StackTrace, default));
+                                    string.Empty, ex.Message, string.Empty, ex.StackTrace, new SourceSegment(0, 0, 0, 0, "|", "|")));
                             }
                         }
                     }
@@ -82,8 +77,8 @@ namespace CouplingAnalyzer
                     Path.GetDirectoryName(solutionPath),
                     $"{Path.GetFileNameWithoutExtension(solutionPath)}.tsv");
                 var content = Enumerable.Empty<string>()
-                    .Append("FromProject\tFromType\tToProject\tToType")
-                    .Concat(dependencies.Select(e => $"{e.SourceSegment.Text}\t{e.FromNamespaceName}.{e.FromTypeName}\t{e.SourceSegment.Path}\t{e.ToNamespaceName}.{e.ToTypeName}"));
+                    .Append("FromProject\tFromFile\tFromType\tToProject\tToFile\tToType")
+                    .Concat(dependencies.Select(e => $"{e.SourceSegment.Text.Split("|")[0]}\t{e.SourceSegment.Text.Split("|")[1]}\t{e.FromNamespaceName}.{e.FromTypeName}\t{e.SourceSegment.Path.Split("|")[0]}\t{e.SourceSegment.Path.Split("|")[1]}\t{e.ToNamespaceName}.{e.ToTypeName}"));
 
                 File.WriteAllLines(reportPath, content);
             }
@@ -131,24 +126,39 @@ namespace CouplingAnalyzer
     class CouplingToClassesFinder : SyntaxNodeAnalyzer
     {
         private HashSet<MethodKind> AllowedMethodKinds { get; }
-        private IDictionary<string, string> AssembliesByPath { get; }
+        private IDictionary<string, ITypeSymbol> AssembliesByPath { get; }
 
         internal CouplingToClassesFinder()
         {
             this.AllowedMethodKinds = new HashSet<MethodKind>() { MethodKind.PropertyGet, MethodKind.PropertySet, MethodKind.Constructor };
-            this.AssembliesByPath = new Dictionary<string, string>();
+            this.AssembliesByPath = new Dictionary<string, ITypeSymbol>();
         }
 
-        internal string ProjectContaining(TypeDependency typeDependency) => this.AssembliesByPath[typeDependency.SourceSegment.Path];
-
-        internal IEnumerable<TypeDependency> GetDependenciesOtherThanSystem(SyntaxNode node, SemanticModel semanticModel)
+        internal IEnumerable<TypeDependency> GetDependenciesOtherThanSystem(SyntaxNode node, SemanticModel semanticModel, Document document)
         {
             var result = this.GetTypeDependencies(node, semanticModel)
                 .Where(e => !e.ToNamespaceName.StartsWith(nameof(System)))
-                .Where(e => e.FromNamespaceName != e.ToNamespaceName || e.FromTypeName != e.ToTypeName);
+                .Where(e => e.FromNamespaceName != e.ToNamespaceName || e.FromTypeName != e.ToTypeName)
+                .Select(e =>
+                {
+                    var itemLocation = this.LocationOf(e);
+                    var response = new TypeDependency(
+                        e.FromNamespaceName,
+                        e.FromTypeName,
+                        e.ToNamespaceName,
+                        e.ToTypeName,
+                        new SourceSegment(0, 0, 0, 0,
+                            string.Join("|", document.Project.Name, document.FilePath), 
+                            string.Join("|", itemLocation.Project, itemLocation.FilePath)));
+
+                    return response;
+                });
 
             return result;
         }
+
+        private (string Project, string FilePath) LocationOf(TypeDependency typeDependency) => this.AssembliesByPath.TryGetValue(typeDependency.SourceSegment.ToString(), out var result)
+            ? (result.ContainingAssembly.Name, result.Locations[0].GetLineSpan().Path) : ("Unknown", "Unknown");
 
         protected override IEnumerable<ITypeSymbol> GetConstituentTypes(ITypeSymbol typeSymbol, SyntaxNode syntaxNode)
         {
@@ -167,11 +177,24 @@ namespace CouplingAnalyzer
                     || e.Kind == SymbolKind.Property
                     || (e is IMethodSymbol method && this.AllowedMethodKinds.Contains(method.MethodKind)));
 
-                if (!onlyFieldsPropertiesAndConstructors)
+                if (!onlyFieldsPropertiesAndConstructors && !item.ContainingNamespace.ToDisplayString().StartsWith(nameof(System)))
                 {
-                    this.AssembliesByPath.TryAdd(
-                        syntaxNode.GetLocation().GetLineSpan().Path,
-                        item.ContainingAssembly.Name);
+                    var lineSpan = syntaxNode.GetLocation().GetLineSpan();
+                    var key = new SourceSegment
+                    (
+                        lineSpan.StartLinePosition.Line + 1,
+                        lineSpan.StartLinePosition.Character + 1,
+                        lineSpan.EndLinePosition.Line + 1,
+                        lineSpan.EndLinePosition.Character + 1,
+                        syntaxNode.ToString(),
+                        lineSpan.Path
+                    ).ToString();
+
+                    if (!this.AssembliesByPath.ContainsKey(key))
+                    {
+                        this.AssembliesByPath.Add(key, item);
+                    }
+
                     yield return item;
                 }
             }

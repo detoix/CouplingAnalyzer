@@ -1,4 +1,7 @@
-FromProject	FromType	ToProject	ToType
-ChildProject	ChildProject.VeryComplexChild	ChildProject	ChildProject.ComplexChild
-ParentProject	ParentProject.Parent	ChildProject	ChildProject.ComplexChild
-ParentProject	ParentProject.Parent	ChildProject	ChildProject.VeryComplexChild
+FromProject	FromFile	FromType	ToProject	ToFile	ToType
+ChildProject	/home/detoix/Software/CouplingAnalyzer/CouplingAnalyzer.Tests.Resources/ChildProject/Child.cs	ChildProject.VeryComplexChild	ChildProject	/home/detoix/Software/CouplingAnalyzer/CouplingAnalyzer.Tests.Resources/ChildProject/Child.cs	ChildProject.ComplexChild
+ParentProject	/home/detoix/Software/CouplingAnalyzer/CouplingAnalyzer.Tests.Resources/ParentProject/OtherClasses.cs	ParentProject.Others.Test	ChildProject	/home/detoix/Software/CouplingAnalyzer/CouplingAnalyzer.Tests.Resources/ChildProject/Child.cs	ChildProject.ComplexChild
+ParentProject	/home/detoix/Software/CouplingAnalyzer/CouplingAnalyzer.Tests.Resources/ParentProject/Parent.cs	ParentProject.Parent	ChildProject	/home/detoix/Software/CouplingAnalyzer/CouplingAnalyzer.Tests.Resources/ChildProject/Child.cs	ChildProject.ComplexChild
+ParentProject	/home/detoix/Software/CouplingAnalyzer/CouplingAnalyzer.Tests.Resources/ParentProject/Parent.cs	ParentProject.Parent	ChildProject	/home/detoix/Software/CouplingAnalyzer/CouplingAnalyzer.Tests.Resources/ChildProject/Child.cs	ChildProject.VeryComplexChild
+ParentProject	/home/detoix/Software/CouplingAnalyzer/CouplingAnalyzer.Tests.Resources/ParentProject/Parent.cs	ParentProject.IParent	ChildProject	/home/detoix/Software/CouplingAnalyzer/CouplingAnalyzer.Tests.Resources/ChildProject/Extensions.cs	ChildProject.Extensions.OtherChild
+ParentProject	/home/detoix/Software/CouplingAnalyzer/CouplingAnalyzer.Tests.Resources/ParentProject/Parent.cs	ParentProject.ParentData	Unknown	Unknown	ChildProject.Extensions.Extensions
