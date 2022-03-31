@@ -12,7 +12,7 @@ namespace CouplingAnalyzer.Tests
         {
             var directory = $"{Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent}.Resources";
             var projectDirectoryName = Path.GetFileName(directory);
-            var expectedPath = Path.Combine(Directory.GetCurrentDirectory(), $"{projectDirectoryName}.tsv");
+            var expectedPath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName, $"{projectDirectoryName}.tsv");
             var actualPath = Path.Combine(directory, $"{projectDirectoryName}.tsv");
 
             if (File.Exists(actualPath))
