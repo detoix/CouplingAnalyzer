@@ -78,7 +78,7 @@ namespace CouplingAnalyzer
                     $"{Path.GetFileNameWithoutExtension(solutionPath)}.tsv");
                 var content = Enumerable.Empty<string>()
                     .Append("FromProject\tFromFile\tFromType\tToProject\tToFile\tToType")
-                    .Concat(dependencies.Select(e => $"{e.SourceSegment.Text.Split("|")[0]}\t{e.SourceSegment.Text.Split("|")[1]}\t{e.FromNamespaceName}.{e.FromTypeName}\t{e.SourceSegment.Path.Split("|")[0]}\t{e.SourceSegment.Path.Split("|")[1]}\t{e.ToNamespaceName}.{e.ToTypeName}"));
+                    .Concat(dependencies.Select(e => $"{e.SourceSegment.Text.Split('|')[0]}\t{e.SourceSegment.Text.Split('|')[1]}\t{e.FromNamespaceName}.{e.FromTypeName}\t{e.SourceSegment.Path.Split('|')[0]}\t{e.SourceSegment.Path.Split('|')[1]}\t{e.ToNamespaceName}.{e.ToTypeName}"));
 
                 File.WriteAllLines(reportPath, content);
             }
