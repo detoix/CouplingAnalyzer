@@ -171,20 +171,23 @@ namespace CouplingAnalyzer
                 .Select(e =>
                 {
                     var itemLocation = this.LocationOf(e);
-                    var response = new TypeDependency(
+                    var typeDependency = new TypeDependency(
                         e.FromNamespaceName,
                         e.FromTypeName,
                         e.ToNamespaceName,
                         e.ToTypeName,
                         new SourceSegment(0, 0, 0, 0,
-                            string.Join("|", document.Project.Name, document.FilePath.Replace(_rootDirectory + Path.DirectorySeparatorChar, string.Empty)), 
-                            string.Join("|", itemLocation.Project, itemLocation.FilePath.Replace(_rootDirectory + Path.DirectorySeparatorChar, string.Empty))));
+                            this.Format(document.Project.Name, document.FilePath), 
+                            this.Format(itemLocation.Project, itemLocation.FilePath)));
 
-                    return response;
+                    return typeDependency;
                 });
 
             return result;
         }
+
+        private string Format(string projectName, string filePath)
+            => string.Join("|", projectName, filePath.Replace(_rootDirectory + Path.DirectorySeparatorChar, string.Empty).Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
 
         private (string Project, string FilePath) LocationOf(TypeDependency typeDependency) => this._assembliesByPath.TryGetValue(typeDependency.SourceSegment.ToString(), out var result)
             ? (result.ContainingAssembly.Name, result.Locations[0].GetLineSpan().Path) : ("Unknown", "Unknown");
