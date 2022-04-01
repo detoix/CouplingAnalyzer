@@ -1,5 +1,4 @@
 using NUnit.Framework;
-using CouplingAnalyzer;
 using System.IO;
 using System.Threading.Tasks;
 
