@@ -8,8 +8,8 @@ dotnet run path/to/solution.sln
 
 Running this command will generate **solution.tsv** file next to your **solution.sln**. It's going to look like this:
 
-| FromProject   | FromFile      | FromType  | ToProject      | ToFile | ToType |
-| ------------- | ------------- | --------- | -------------- | ------ | ------ |
-| Namespace     | Foo.cs        | Foo       | OtherNamespace | Bar.cs | Bar    |
+| FromProject   | FromFile      | FromType  | ToProject         | ToFile | ToType |
+| ------------- | ------------- | --------- | ----------------- | ------ | ------ |
+| AssemblyName  | Foo.cs        | Foo       | OtherAssemblyName | Bar.cs | Bar    |
 
 Having this data you can put it into Excel spreadsheet, create a pivot table and analyze coupling efficiently.
